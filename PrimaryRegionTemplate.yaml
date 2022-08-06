@@ -5,7 +5,7 @@ Parameters:
   tagKeyValue:
     Description: 'The value for the key tag that you want all volumes to have for the snapshot managment to apply.'
     Type: 'String'
-    Default: 'DR'
+    Default: 'none'
   DRRegion:
     Description: 'The DR region where snapshots will be copied (This should be a different region from the region you are running this CloudFormation stack in.'
     Type: 'String'

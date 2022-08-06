@@ -163,7 +163,7 @@ Resources:
       Runtime: nodejs16.x
       FunctionName:
         Fn::Sub: TagSnapshotCopy-${FunctionNameSuffix}
-      CodeUri: s3://dr-test-sydney-region/fad67a357f0e9ea08c49d901aff121b3
+      CodeUri: s3://dr-test-sydney-region/a32483d9b5d487436986cad224695cf2
       Role:
         Fn::GetAtt:
         - SnapshotManagementIAMRole
@@ -178,7 +178,7 @@ Resources:
       Runtime: nodejs16.x
       FunctionName:
         Fn::Sub: CountSnapshots-${FunctionNameSuffix}
-      CodeUri: s3://dr-test-sydney-region/fad67a357f0e9ea08c49d901aff121b3
+      CodeUri: s3://dr-test-sydney-region/a32483d9b5d487436986cad224695cf2
       Role:
         Fn::GetAtt:
         - SnapshotManagementIAMRole
@@ -194,7 +194,7 @@ Resources:
       Runtime: nodejs16.x
       FunctionName:
         Fn::Sub: DeleteOldSnapshots-${FunctionNameSuffix}
-      CodeUri: s3://dr-test-sydney-region/fad67a357f0e9ea08c49d901aff121b3
+      CodeUri: s3://dr-test-sydney-region/a32483d9b5d487436986cad224695cf2
       Role:
         Fn::GetAtt:
         - SnapshotDeletionIAMRole
@@ -213,7 +213,7 @@ Resources:
       Runtime: nodejs16.x
       FunctionName:
         Fn::Sub: Notification-${FunctionNameSuffix}
-      CodeUri: s3://dr-test-sydney-region/fad67a357f0e9ea08c49d901aff121b3
+      CodeUri: s3://dr-test-sydney-region/a32483d9b5d487436986cad224695cf2
       Role:
         Fn::GetAtt:
         - SNSNotificationIAMRole
