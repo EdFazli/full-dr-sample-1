@@ -13,7 +13,7 @@ Parameters:
   Retention:
     Description: 'The number of snapshots you want to keep per volume.'
     Type: 'String'
-    Default: '2'
+    Default: '7'
   FunctionNameSuffix:
     Description: 'Suffix to append to the Lambda functions.'
     Type: 'String'
