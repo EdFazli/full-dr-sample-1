@@ -23,6 +23,6 @@ BELOW COMMANDS NEED TO BE PERFORM IN LOCAL PC WITHIN THE FOLDER CONTAINS ALL THE
 4. Creates an S3 bucket for staging code in DR region (ap-southeast-2)
     `aws s3api create-bucket --bucket dr-test-sydney-region --region ap-southeast-2 --create-bucket-configuration LocationConstraint=ap-southeast-2`
 5. Package the code and upload to S3 (Sydney Region)
-    `aws cloudformation package --template-file DR_RegionTemplate.yaml --s3-bucket ap-southeast-2 --output-template-file tempDR.yaml --region ap-southeast-2`
+    `aws cloudformation package --template-file DR_RegionTemplate.yaml --s3-bucket dr-test-sydney-region --output-template-file tempDR.yaml --region ap-southeast-2`
 6. Deploy the cloudformation stack
     `aws cloudformation deploy --template-file tempDR.yaml --stack-name DRRegionSnapshotManagement --capabilities CAPABILITY_IAM --region ap-southeast-2`
