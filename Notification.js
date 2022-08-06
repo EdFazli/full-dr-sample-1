@@ -2,7 +2,7 @@
     // Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
     // SPDX-License-Identifier: MIT-0.
 */
-import { SNS } from 'aws-sdk';
+//import { SNS } from 'aws-sdk';
 var AWS = require('aws-sdk');
 var sns = new AWS.SNS();
 
