@@ -4,7 +4,8 @@
 */
 // Sample Lambda function to copy an EBS snapshot to a different region
 import { EC2, config } from 'aws-sdk';
-var ec2 = new EC2();
+var AWS = require('aws-sdk');
+var ec2 = new AWS.EC2();
 
 export function handler(event, context, callback) {
 

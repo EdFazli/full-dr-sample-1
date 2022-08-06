@@ -3,7 +3,8 @@
     // SPDX-License-Identifier: MIT-0.
 */
 import { EC2 } from 'aws-sdk';
-var ec2 = new EC2();
+var AWS = require('aws-sdk');
+var ec2 = new AWS.EC2();
 
 export function handler(event, context, callback) {
 

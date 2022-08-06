@@ -3,7 +3,8 @@
     // SPDX-License-Identifier: MIT-0.
 */
 import { SNS } from 'aws-sdk';
-var sns = new SNS();
+var AWS = require('aws-sdk');
+var sns = new AWS.SNS();
 
 /* Lambda "main": Execution begins here */
 export function handler(event, context, callback) {
