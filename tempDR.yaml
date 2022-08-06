@@ -1,0 +1,303 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ''
+Parameters:
+  Retention:
+    Description: The number of snapshots you want to keep per volume in your DR Region.
+    Type: String
+    Default: '1'
+  FunctionNameSuffix:
+    Description: Suffix to append to the Lambda functions.
+    Type: String
+    Default: ''
+Resources:
+  StatesExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+              Fn::Sub: states.${AWS::Region}.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: StatesExecutionPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - lambda:InvokeFunction
+            Resource: '*'
+  ExecuteStateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AllowCWEServiceToAssumeRole
+          Effect: Allow
+          Action:
+          - sts:AssumeRole
+          Principal:
+            Service:
+            - events.amazonaws.com
+      Path: /
+      Policies:
+      - PolicyName: ExecuteStateMachine
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - states:StartExecution
+            Resource: '*'
+  SNSNotificationIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AllowLambdaServiceToAssumeRole
+          Effect: Allow
+          Action:
+          - sts:AssumeRole
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+      Path: /
+      Policies:
+      - PolicyName: SNSNotification
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - sns:Publish
+            Resource:
+              Ref: NotificationTopic
+      - PolicyName: WriteToCWLogs
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogStream
+            - logs:CreateLogGroup
+            - logs:PutLogEvents
+            Resource: '*'
+  SnapshotManagementIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AllowLambdaServiceToAssumeRole
+          Effect: Allow
+          Action:
+          - sts:AssumeRole
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+      Path: /
+      Policies:
+      - PolicyName: SnapshotDescribeCopyPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - ec2:describeSnapshots
+            - ec2:copySnapshot
+            - ec2:createTags
+            Resource: '*'
+      - PolicyName: WriteToCWLogs
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogStream
+            - logs:CreateLogGroup
+            - logs:PutLogEvents
+            Resource: '*'
+  SnapshotDeletionIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AllowLambdaServiceToAssumeRole
+          Effect: Allow
+          Action:
+          - sts:AssumeRole
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+      Path: /
+      Policies:
+      - PolicyName: SnapshotDeletionPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action: ec2:deleteSnapshot
+            Resource: '*'
+      - PolicyName: WriteToCWLogs
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogStream
+            - logs:CreateLogGroup
+            - logs:PutLogEvents
+            Resource: '*'
+  TagSnapshotCopy:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: TagSnapshotCopy.handler
+      Runtime: nodejs16.x
+      FunctionName:
+        Fn::Sub: TagSnapshotCopy-${FunctionNameSuffix}
+      CodeUri: s3://dr-test-sydney-region/fad67a357f0e9ea08c49d901aff121b3
+      Role:
+        Fn::GetAtt:
+        - SnapshotManagementIAMRole
+        - Arn
+      Description: Tags any new snapshot copies created
+      MemorySize: 128
+      Timeout: 15
+  CountSnapshots:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: CountSnapshots.handler
+      Runtime: nodejs16.x
+      FunctionName:
+        Fn::Sub: CountSnapshots-${FunctionNameSuffix}
+      CodeUri: s3://dr-test-sydney-region/fad67a357f0e9ea08c49d901aff121b3
+      Role:
+        Fn::GetAtt:
+        - SnapshotManagementIAMRole
+        - Arn
+      Description: Count how many current snapshots exist for the volume ID and return
+        the snapshot data
+      MemorySize: 128
+      Timeout: 15
+  DeleteOldSnapshots:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: DeleteOldSnapshots.handler
+      Runtime: nodejs16.x
+      FunctionName:
+        Fn::Sub: DeleteOldSnapshots-${FunctionNameSuffix}
+      CodeUri: s3://dr-test-sydney-region/fad67a357f0e9ea08c49d901aff121b3
+      Role:
+        Fn::GetAtt:
+        - SnapshotDeletionIAMRole
+        - Arn
+      Description: Deletes any snapshots beyond the retention period.
+      MemorySize: 128
+      Timeout: 15
+      Environment:
+        Variables:
+          retentionPeriod:
+            Ref: Retention
+  NotifyUser:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: Notification.handler
+      Runtime: nodejs16.x
+      FunctionName:
+        Fn::Sub: Notification-${FunctionNameSuffix}
+      CodeUri: s3://dr-test-sydney-region/fad67a357f0e9ea08c49d901aff121b3
+      Role:
+        Fn::GetAtt:
+        - SNSNotificationIAMRole
+        - Arn
+      Description: Puts notification to topic regarding errors in snapshot management
+        flow
+      MemorySize: 128
+      Timeout: 15
+      Environment:
+        Variables:
+          notificationTopic:
+            Ref: NotificationTopic
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: SnapshotMgmtTopic
+  SnapshotMgmtStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      DefinitionString:
+        Fn::Sub: "{\n  \"StartAt\": \"TagSnapshot\",\n  \"States\": {\n    \"TagSnapshot\"\
+          : {\n      \"Type\": \"Task\",\n      \"Resource\": \"${TagSnapshotCopy.Arn}\"\
+          ,\n      \"OutputPath\": \"$\",\n      \"ResultPath\": \"$.originalVolumeId\"\
+          ,\n      \"TimeoutSeconds\": 15,\n      \"Catch\": [\n        {\n      \
+          \    \"ErrorEquals\": [\"States.ALL\"],\n          \"ResultPath\": \"$.errorMsg\"\
+          ,\n          \"Next\": \"NotifyUser\"\n        }\n      ],\n      \"Next\"\
+          : \"EvaluateContinue\"\n    },\n    \"EvaluateContinue\": {\n      \"Type\"\
+          : \"Choice\",\n      \"Choices\": [\n        {\n          \"StringEquals\"\
+          : \"VOLUME_NOT_TAGGED\",\n          \"Variable\": \"$.originalVolumeId\"\
+          ,\n          \"Next\": \"SuccessState\"\n        }\n      ],\n      \"Default\"\
+          : \"RetrieveNumberOfSnapshots\"\n    },\n    \"RetrieveNumberOfSnapshots\"\
+          : {\n      \"Type\": \"Task\",\n      \"Resource\": \"${CountSnapshots.Arn}\"\
+          ,\n      \"OutputPath\": \"$\",\n      \"ResultPath\": \"$.snapshotList\"\
+          ,\n      \"TimeoutSeconds\": 20,\n      \"Catch\": [\n        {\n      \
+          \    \"ErrorEquals\": [\"States.ALL\"],\n          \"ResultPath\": \"$.errorMsg\"\
+          ,\n          \"Next\": \"NotifyUser\"\n        }\n      ],\n      \"Next\"\
+          : \"EvaluateSnapshotDeletion\"\n    },\n    \"EvaluateSnapshotDeletion\"\
+          : {\n      \"Type\": \"Choice\",\n      \"Choices\": [\n        {\n    \
+          \      \"NumericGreaterThan\": ${Retention},\n          \"Variable\": \"\
+          $.snapshotList.numSnapshots\",\n          \"Next\": \"CleanupSnapshotsPastRetention\"\
+          \n        }\n      ],\n      \"Default\": \"SuccessState\"\n    },\n   \
+          \ \"CleanupSnapshotsPastRetention\": {\n      \"Type\": \"Task\",\n    \
+          \  \"Resource\": \"${DeleteOldSnapshots.Arn}\",\n      \"TimeoutSeconds\"\
+          : 60,\n      \"Catch\": [\n        {\n          \"ErrorEquals\": [\"States.ALL\"\
+          ],\n          \"ResultPath\": \"$.errorMsg\",\n          \"Next\": \"NotifyUser\"\
+          \n        }\n      ],\n      \"End\": true\n    },\n    \"NotifyUser\":\
+          \ {\n      \"Type\": \"Task\",\n      \"Resource\": \"${NotifyUser.Arn}\"\
+          ,\n      \"TimeoutSeconds\": 60,\n      \"End\": true\n    },\n    \"SuccessState\"\
+          \ : {\n      \"Type\" : \"Succeed\",\n      \"OutputPath\": \"$\"\n    }\n\
+          \  }\n}"
+      RoleArn:
+        Fn::GetAtt:
+        - StatesExecutionRole
+        - Arn
+  CloudWatchEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Rule to invoke snapshot mgmt state machine upon snapshot completion
+      EventPattern:
+        source:
+        - aws.ec2
+        detail-type:
+        - EBS Snapshot Notification
+        detail:
+          event:
+          - copySnapshot
+      Name: EBS_Snapshot_Mgmt
+      State: ENABLED
+      Targets:
+      - Arn:
+          Ref: SnapshotMgmtStateMachine
+        Id: SFN_Target
+        RoleArn:
+          Fn::GetAtt:
+          - ExecuteStateMachineRole
+          - Arn
+Outputs:
+  StateMachineArn:
+    Description: ARN for the Step Functions state machine
+    Value:
+      Ref: SnapshotMgmtStateMachine
+  CWETriggerRoleArn:
+    Description: ARN for the IAM role to execute the state machine
+    Value:
+      Fn::GetAtt:
+      - ExecuteStateMachineRole
+      - Arn
