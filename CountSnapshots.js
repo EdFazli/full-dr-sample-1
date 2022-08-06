@@ -2,10 +2,10 @@
     // Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
     // SPDX-License-Identifier: MIT-0.
 */
-var AWS = require('aws-sdk');
-var ec2 = new AWS.EC2();
+import { EC2 } from 'aws-sdk';
+var ec2 = new EC2();
 
-exports.handler = (event, context, callback) => {
+export function handler(event, context, callback) {
 
   console.log(JSON.stringify(event));
 
@@ -49,4 +49,4 @@ exports.handler = (event, context, callback) => {
         callback(null, data);
     }
   });
-};
+}

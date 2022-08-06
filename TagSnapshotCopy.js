@@ -2,10 +2,10 @@
     // Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
     // SPDX-License-Identifier: MIT-0.
 */
-var AWS = require('aws-sdk');
-var ec2 = new AWS.EC2();
+import { EC2 } from 'aws-sdk';
+var ec2 = new EC2();
 
-exports.handler = (event, context, callback) => {
+export function handler(event, context, callback) {
 
     // pull snapshot id
     var snapshotId = event.detail.snapshot_id.substring(event.detail.snapshot_id.indexOf('/') + 1);
@@ -45,7 +45,7 @@ exports.handler = (event, context, callback) => {
          tagSnapshot(event,snapshotId,originalVolumeId, originalRegion, callback);
       }
     });
-};
+}
 
 function tagSnapshot(event, snapshotId, originalVolumeId, originalRegion, callback)
 {
