@@ -3,12 +3,12 @@
     // SPDX-License-Identifier: MIT-0.
 */
 // Sample Lambda function to copy an EBS snapshot to a different region
-//import { EC2, config } from 'aws-sdk';
-var AWS = require('aws-sdk');
-var ec2 = new AWS.EC2();
-var config = new AWS.config();
+import { EC2, config } from 'aws-sdk';
+//var AWS = require('aws-sdk');
+var ec2 = new EC2();
+//var config = new AWS.config();
 
-export function handler(event, context, callback) {
+exports.handler = function (event, context, callback) {
 
     //pull the destination region from the environment variables
     var destinationRegion = process.env.destRegion;

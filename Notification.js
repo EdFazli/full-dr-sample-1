@@ -2,12 +2,12 @@
     // Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
     // SPDX-License-Identifier: MIT-0.
 */
-//import { SNS } from 'aws-sdk';
-var AWS = require('aws-sdk');
-var sns = new AWS.SNS();
+import { SNS } from 'aws-sdk';
+//var AWS = require('aws-sdk');
+var sns = new SNS();
 
 /* Lambda "main": Execution begins here */
-export function handler(event, context, callback) {
+exports.handler = function (event, context, callback) {
     console.log('Received event:', JSON.stringify(event, null, 2));
 
     var messageInfo = buildErrorMessage(event.detail.source,event.errorMsg);
