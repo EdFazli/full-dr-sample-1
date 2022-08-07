@@ -174,7 +174,7 @@ Resources:
       Runtime: nodejs16.x
       FunctionName:
         Fn::Sub: TagSnapshots-${FunctionNameSuffix}
-      CodeUri: s3://dr-test-sg-region/ed4928b560c6c7f65f407ffc8fbf9c9d
+      CodeUri: s3://dr-test-sg-region/95dcc6038fa407b25699f3160d2e1020
       Role:
         Fn::GetAtt:
         - SnapshotManagementIAMRole
@@ -193,7 +193,7 @@ Resources:
       Runtime: nodejs16.x
       FunctionName:
         Fn::Sub: CountSnapshots-${FunctionNameSuffix}
-      CodeUri: s3://dr-test-sg-region/ed4928b560c6c7f65f407ffc8fbf9c9d
+      CodeUri: s3://dr-test-sg-region/95dcc6038fa407b25699f3160d2e1020
       Role:
         Fn::GetAtt:
         - SnapshotManagementIAMRole
@@ -213,7 +213,7 @@ Resources:
       Runtime: nodejs16.x
       FunctionName:
         Fn::Sub: CopySnapshotToDRRegion-${FunctionNameSuffix}
-      CodeUri: s3://dr-test-sg-region/ed4928b560c6c7f65f407ffc8fbf9c9d
+      CodeUri: s3://dr-test-sg-region/95dcc6038fa407b25699f3160d2e1020
       Role:
         Fn::GetAtt:
         - SnapshotManagementIAMRole
@@ -232,7 +232,7 @@ Resources:
       Runtime: nodejs16.x
       FunctionName:
         Fn::Sub: DeleteOldSnapshots-${FunctionNameSuffix}
-      CodeUri: s3://dr-test-sg-region/ed4928b560c6c7f65f407ffc8fbf9c9d
+      CodeUri: s3://dr-test-sg-region/95dcc6038fa407b25699f3160d2e1020
       Role:
         Fn::GetAtt:
         - SnapshotDeletionIAMRole
@@ -251,7 +251,7 @@ Resources:
       Runtime: nodejs16.x
       FunctionName:
         Fn::Sub: Notification-${FunctionNameSuffix}
-      CodeUri: s3://dr-test-sg-region/ed4928b560c6c7f65f407ffc8fbf9c9d
+      CodeUri: s3://dr-test-sg-region/95dcc6038fa407b25699f3160d2e1020
       Role:
         Fn::GetAtt:
         - SNSNotificationIAMRole
